@@ -1,587 +1,880 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Stille-Zeit</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Cinzel:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Stille Zeit Timer - Ein moderner, minimalistischer Meditations-Timer für Gebet und Bibelarbeit mit flüssigen Animationen und beruhigenden Klangschalen.">
+  <title>Stille Zeit Timer</title>
+  <style>
+    /* SOFT MODERN NEON DESIGN TOKENS */
+    :root {
+      --bg-black: #050505;
+      
+      /* Softer, pastel-neon light tones */
+      --neon-pink: #ff65a3;
+      --neon-purple: #b666ff;
+      --neon-red: #ff6b6b;
+      
+      /* Widely diffused, ambient glows (no harsh glare) */
+      --glow-pink: 0 0 15px rgba(255, 101, 163, 0.35), 0 0 35px rgba(255, 101, 163, 0.15);
+      --glow-purple: 0 0 15px rgba(182, 102, 255, 0.35), 0 0 35px rgba(182, 102, 255, 0.15);
+      --glow-red: 0 0 15px rgba(255, 107, 107, 0.35), 0 0 35px rgba(255, 107, 107, 0.15);
+      
+      --glow-text-pink: 0 0 8px rgba(255, 101, 163, 0.5), 0 0 25px rgba(255, 101, 163, 0.2);
+      --glow-text-purple: 0 0 8px rgba(182, 102, 255, 0.5), 0 0 25px rgba(182, 102, 255, 0.2);
+      --glow-text-red: 0 0 8px rgba(255, 107, 107, 0.5), 0 0 25px rgba(255, 107, 107, 0.2);
 
-  :root {
-    --bg:         #08060a;
-    --surface:    #100c14;
-    --accent:     #9b3a5a;
-    --accent-lt:  #c45c7a;
-    --accent-dim: #5a2236;
-    --purple:     #6b3480;
-    --purple-lt:  #9156a8;
-    --ivory:      #ede0e8;
-    --ivory-dim:  #7a6a74;
-    --text:       #d4c0cc;
-    --ph1-col:    #b04060;
-    --ph2-col:    #7a3896;
-    --tr:         0.7s cubic-bezier(0.4,0,0.2,1);
-  }
+      /* Elegant typography configuration */
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --transition-slow: 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+      --transition-fast: 0.3s ease;
+    }
 
-  html, body {
-    height: 100%; overflow: hidden;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    -webkit-tap-highlight-color: transparent;
-  }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  body::before {
-    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
-    opacity:0.4;
-  }
+    body {
+      background-color: var(--bg-black);
+      color: #ffffff;
+      font-family: var(--font-family);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      transition: background-color var(--transition-slow);
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  .blob { position:fixed; border-radius:50%; filter:blur(70px); pointer-events:none; z-index:0; }
-  .blob-1 {
-    width:70vw; height:70vw; top:-20%; left:-20%;
-    background:radial-gradient(circle, rgba(155,58,90,0.18) 0%, transparent 70%);
-  }
-  .blob-2 {
-    width:60vw; height:60vw; bottom:-15%; right:-15%;
-    background:radial-gradient(circle, rgba(107,52,128,0.18) 0%, transparent 70%);
-  }
+    /* SOFT LIGHTING AMBIANCE */
+    /* Dynamic screen-wide aura overlay */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(182, 102, 255, 0.12) 0%, rgba(255, 101, 163, 0.06) 50%, rgba(0,0,0,0) 80%);
+      pointer-events: none;
+      z-index: -2;
+      opacity: 0;
+      transition: opacity var(--transition-slow);
+    }
 
-  #app {
-    position:relative; z-index:1;
-    height:100vh; display:flex;
-    flex-direction:column; align-items:center; justify-content:flex-start;
-    padding: 0 0 env(safe-area-inset-bottom,0);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+    /* Full-screen rising vertical fill progress */
+    .vertical-progress-bg {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(0deg, rgba(182, 102, 255, 0.02) 0%, rgba(255, 101, 163, 0.06) 100%);
+      pointer-events: none;
+      z-index: -1;
+      border-top: 1px solid rgba(255, 101, 163, 0.15);
+      box-shadow: 0 -8px 20px rgba(255, 101, 163, 0.08);
+      transition: height 0.3s linear;
+    }
 
-  /* ══════════════════════════════════
-     SETTINGS
-  ══════════════════════════════════ */
-  #settings {
-    width:100%; max-width:400px;
-    display:flex; flex-direction:column; gap:1.4rem;
-    padding: 2rem 1.4rem 2.4rem;
-    animation: fadeUp 0.7s ease both;
-  }
-  #settings.hidden { animation: fadeOut 0.45s ease forwards; }
+    /* GLASS CONTAINER */
+    .container {
+      width: 90%;
+      max-width: 440px;
+      padding: 2.8rem;
+      border-radius: 28px;
+      background: rgba(8, 8, 8, 0.45);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      transition: opacity var(--transition-slow), transform var(--transition-slow);
+      z-index: 10;
+    }
 
-  .panel-title {
-    font-family:'Cinzel',serif;
-    font-size:1.35rem;
-    letter-spacing:0.3em;
-    color:var(--accent-lt);
-    text-align:center;
-    text-transform:uppercase;
-    padding-top:0.4rem;
-  }
-  .panel-sub {
-    text-align:center;
-    font-size:0.95rem; font-style:italic;
-    color:var(--ivory-dim);
-    letter-spacing:0.06em;
-    margin-top:-0.8rem;
-  }
+    .hidden {
+      display: none !important;
+      opacity: 0;
+      transform: scale(0.97);
+    }
 
-  .setting-group {
-    background:rgba(255,255,255,0.025);
-    border:1px solid rgba(155,58,90,0.18);
-    border-radius:14px;
-    padding:1.2rem 1.2rem 1.4rem;
-    display:flex; flex-direction:column; gap:1rem;
-  }
-  .setting-label {
-    font-family:'Cinzel',serif;
-    font-size:0.68rem; letter-spacing:0.22em;
-    color:var(--accent-dim);
-    text-transform:uppercase;
-  }
+    /* MINIMALIST TYPOGRAPHY */
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 300;
+      color: #ffffff;
+      text-shadow: var(--glow-text-purple);
+      margin-bottom: 1.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      transition: text-shadow var(--transition-slow);
+    }
 
-  .sliders-row {
-    display:flex; gap:1rem; justify-content:center; align-items:stretch;
-  }
-  .slider-col {
-    flex:1; display:flex; flex-direction:column;
-    align-items:center; gap:0.7rem;
-  }
-  .slider-col-name {
-    font-size:0.82rem; color:var(--ivory-dim);
-    text-align:center; font-style:italic; line-height:1.35;
-  }
-  .slider-val-big {
-    font-family:'Cinzel',serif;
-    font-size:1.5rem; color:var(--accent-lt);
-    line-height:1;
-  }
-  .slider-val-unit {
-    font-size:0.68rem; color:var(--ivory-dim); letter-spacing:0.1em;
-  }
+    .sub-headline {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: -1.4rem;
+      margin-bottom: 2.5rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
 
-  .v-range-wrap {
-    height:120px; display:flex; align-items:center; justify-content:center;
-    position:relative;
-  }
-  input[type=range].vertical {
-    -webkit-appearance:none;
-    writing-mode:vertical-lr;
-    direction:rtl;
-    width:4px; height:110px;
-    background:linear-gradient(to top,
-      var(--accent) 0%,
-      var(--accent) var(--pct,25%),
-      rgba(155,58,90,0.15) var(--pct,25%));
-    border-radius:99px; outline:none; cursor:pointer;
-    appearance: slider-vertical;
-  }
-  input[type=range].vertical::-webkit-slider-container { writing-mode: vertical-lr; }
-  input[type=range].vertical::-webkit-slider-runnable-track { width:4px; background:transparent; }
-  input[type=range].vertical::-webkit-slider-thumb {
-    -webkit-appearance:none;
-    width:22px; height:22px; border-radius:50%;
-    background:var(--accent-lt);
-    box-shadow:0 0 12px rgba(155,58,90,0.6);
-    margin-left:-9px;
-    transition:transform 0.15s;
-  }
-  input[type=range].vertical::-webkit-slider-thumb:active { transform:scale(1.2); }
-  input[type=range].vertical::-moz-range-thumb {
-    width:22px; height:22px; border-radius:50%; border:none;
-    background:var(--accent-lt);
-    box-shadow:0 0 12px rgba(155,58,90,0.6);
-  }
+    /* FORM ELEMENTS */
+    .setup-group {
+      margin-bottom: 2rem;
+      text-align: left;
+    }
 
-  .order-col { display:flex; flex-direction:column; gap:0.6rem; }
-  .order-opt {
-    width:100%; padding:0.7rem 0.9rem;
-    border-radius:9px;
-    border:1px solid rgba(155,58,90,0.18);
-    cursor:pointer; font-family:'Cormorant Garamond',serif;
-    font-size:0.9rem; color:var(--ivory-dim);
-    text-align:left; line-height:1.4;
-    background:transparent;
-    transition:all 0.25s;
-    display:flex; align-items:center; gap:0.6rem;
-  }
-  .order-opt .opt-num {
-    font-family:'Cinzel',serif;
-    font-size:0.6rem; letter-spacing:0.15em;
-    color:var(--accent-dim);
-    white-space:nowrap;
-    flex-shrink:0;
-  }
-  .order-opt.active {
-    background:rgba(155,58,90,0.12);
-    border-color:var(--accent);
-    color:var(--ivory);
-  }
+    .setup-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
 
-  .btn-start {
-    width:100%; padding:0.95rem;
-    border:none; border-radius:11px;
-    font-family:'Cinzel',serif;
-    font-size:0.9rem; letter-spacing:0.28em;
-    text-transform:uppercase; cursor:pointer;
-    background:linear-gradient(135deg, #7d2040, #b04060, #7d2040);
-    color:#ede0e8;
-    box-shadow:0 4px 28px rgba(155,58,90,0.35);
-    transition:transform 0.2s, box-shadow 0.2s;
-  }
-  .btn-start:active { transform:scale(0.97); }
+    .label-tag-prayer {
+      color: var(--neon-pink);
+      text-shadow: 0 0 5px rgba(255, 101, 163, 0.3);
+    }
 
-  /* ══════════════════════════════════
-     TIMER VIEW
-  ══════════════════════════════════ */
-  #timer-view {
-    position:absolute; inset:0;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    padding:1.5rem 1.2rem;
-    opacity:0; pointer-events:none;
-    transition:opacity var(--tr);
-  }
-  #timer-view.visible { opacity:1; pointer-events:all; }
+    .label-tag-bible {
+      color: var(--neon-purple);
+      text-shadow: 0 0 5px rgba(182, 102, 255, 0.3);
+    }
 
-  /* Bildschirm-Hintergrundsäule (Verlauf von oben nach unten) */
-  #progress-bg {
-    position:fixed; inset:0; z-index:0;
-    pointer-events:none;
-    background: linear-gradient(to bottom, #b04060, #7a3896);
-    transform: translateY(-100%);
-    transition: transform 1s linear;
-  }
+    .time-value {
+      font-size: 1rem;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.9);
+    }
 
-  .ripple {
-    position:fixed; inset:0; z-index:4;
-    pointer-events:none; background:white; opacity:0;
-    animation:rippleFlash 0.85s ease forwards;
-  }
-  @keyframes rippleFlash {
-    0%   { opacity:0.2; }
-    100% { opacity:0; }
-  }
+    /* Thin modern sliders */
+    .slider-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
 
-  .timer-inner {
-    position:relative; z-index:3;
-    text-align:center;
-    display:flex; flex-direction:column;
-    align-items:center; gap:1.1rem;
-    width:100%; max-width:360px;
-  }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      outline: none;
+    }
 
-  .phase-dots { display:flex; gap:0.6rem; }
-  .dot {
-    width:7px; height:7px; border-radius:50%;
-    background:rgba(155,58,90,0.2);
-    transition:all 0.45s;
-  }
-  .dot.active {
-    background:var(--accent-lt);
-    box-shadow:0 0 8px rgba(155,58,90,0.7);
-    transform:scale(1.35);
-  }
-  .dot.done { background:rgba(155,58,90,0.45); }
+    /* Pink Slider (Prayer) */
+    input[type="range"].slider-prayer::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--neon-pink);
+      box-shadow: var(--glow-pink);
+      cursor: pointer;
+      transition: transform var(--transition-fast) ease;
+    }
+    input[type="range"].slider-prayer::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+    input[type="range"].slider-prayer::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--neon-pink);
+      box-shadow: var(--glow-pink);
+      cursor: pointer;
+    }
 
-  #phase-label {
-    font-family:'Cinzel',serif;
-    font-size:0.68rem; letter-spacing:0.3em;
-    color:var(--accent-dim); text-transform:uppercase;
-  }
+    /* Purple Slider (Bible) */
+    input[type="range"].slider-bible::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--neon-purple);
+      box-shadow: var(--glow-purple);
+      cursor: pointer;
+      transition: transform var(--transition-fast) ease;
+    }
+    input[type="range"].slider-bible::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+    input[type="range"].slider-bible::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid var(--neon-purple);
+      box-shadow: var(--glow-purple);
+      cursor: pointer;
+    }
 
-  .clock-wrap {
-    position:relative;
-    display:inline-flex; align-items:center; justify-content:center;
-    width:min(72vw, 280px); height:min(72vw, 280px);
-  }
-  .arc-svg { position:absolute; inset:0; width:100%; height:100%; }
-  .arc-bg { stroke:rgba(255,255,255,0.08); }
-  .arc-fill {
-    stroke: #ede0e8;
-    stroke-linecap:round;
-    filter:drop-shadow(0 0 5px rgba(255,255,255,0.4));
-    transition:stroke-dashoffset 1.05s linear;
-    transform-origin:center;
-    transform:rotate(-90deg);
-  }
-  #clock {
-    font-family:'Cormorant Garamond',serif;
-    font-size:clamp(3.2rem, 14vw, 5.5rem);
-    font-weight:300; line-height:1;
-    letter-spacing:-0.02em;
-    color:var(--ivory);
-    transition:color 0.5s;
-    position:relative; z-index:1;
-  }
-  #clock.urgent {
-    color:#e07070;
-    text-shadow:0 0 30px rgba(224,112,112,0.35);
-    animation:pulse 1s ease infinite;
-  }
-  @keyframes pulse {
-    0%,100% { transform:scale(1); }
-    50%      { transform:scale(1.015); }
-  }
+    /* ORDER RADIO SWITCH */
+    .order-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.6rem;
+    }
 
-  #phase-heading {
-    font-size:clamp(1.3rem, 5.5vw, 2rem);
-    font-weight:300; color:var(--ivory);
-    letter-spacing:0.03em; line-height:1.2;
-    transition:all 0.55s;
-  }
+    .order-option {
+      position: relative;
+      cursor: pointer;
+      display: block;
+    }
 
-  #next-info {
-    font-size:0.82rem; font-style:italic;
-    color:var(--ivory-dim); letter-spacing:0.07em;
-    opacity:0.55; min-height:1.2em;
-  }
+    .order-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
 
-  .btn-reset {
-    background:transparent;
-    border:1px solid rgba(255,255,255,0.2);
-    border-radius:8px; padding:0.55rem 1.8rem;
-    color:var(--ivory-dim);
-    font-family:'Cinzel',serif;
-    font-size:0.65rem; letter-spacing:0.2em;
-    text-transform:uppercase; cursor:pointer;
-    transition:all 0.3s; margin-top:0.4rem;
-  }
-  .btn-reset:active {
-    border-color:var(--ivory); color:var(--ivory);
-    background:rgba(255,255,255,0.08);
-  }
+    .order-card {
+      padding: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.01);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all var(--transition-fast);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.4);
+    }
 
-  /* ══════════════════════════════════
-     DONE
-  ══════════════════════════════════ */
-  #done-view {
-    position:absolute; inset:0;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    gap:1.5rem; z-index:5;
-    opacity:0; pointer-events:none;
-    transition:opacity 1s ease;
-    padding:2rem;
-  }
-  #done-view.visible { opacity:1; pointer-events:all; }
-  .done-icon { font-size:3rem; animation:floatIcon 3s ease-in-out infinite; }
-  @keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
-  .done-title {
-    font-family:'Cinzel',serif;
-    font-size:1.3rem; letter-spacing:0.22em;
-    color:var(--accent-lt); text-transform:uppercase;
-  }
-  .done-sub {
-    font-size:1rem; font-style:italic;
-    color:var(--ivory-dim); letter-spacing:0.06em; text-align:center;
-  }
+    .order-option input:checked + .order-card {
+      background: rgba(182, 102, 255, 0.05);
+      border-color: rgba(182, 102, 255, 0.6);
+      box-shadow: var(--glow-purple);
+      color: #ffffff;
+      text-shadow: 0 0 3px rgba(255, 255, 255, 0.4);
+    }
 
-  @keyframes fadeUp {
-    from { opacity:0; transform:translateY(22px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes fadeOut {
-    to { opacity:0; transform:translateY(-16px); }
-  }
-</style>
+    /* START BUTTON */
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      background: transparent;
+      border: 1px solid rgba(255, 101, 163, 0.6);
+      color: #ffffff;
+      border-radius: 14px;
+      font-family: var(--font-family);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      box-shadow: var(--glow-pink);
+      text-shadow: 0 0 3px #ffffff;
+      transition: all var(--transition-fast);
+    }
+
+    .btn:hover {
+      background: rgba(255, 101, 163, 0.1);
+      box-shadow: 0 0 20px rgba(255, 101, 163, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    /* SMOOTH CIRCULAR DISPLAY */
+    .circle-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin: 0.5rem auto 1.8rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .progress-ring-bg {
+      stroke: rgba(255, 255, 255, 0.02);
+      stroke-width: 3;
+      fill: transparent;
+    }
+
+    .progress-ring-fg {
+      stroke-width: 3;
+      fill: transparent;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      /* Transition is fast/none to allow butter-smooth requestAnimationFrame update */
+      transition: stroke 0.8s ease, filter 0.8s ease;
+    }
+
+    .circle-inner-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      width: 90%;
+    }
+
+    .timer-title {
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 0.4rem;
+    }
+
+    .timer-phase-name {
+      font-size: 1.4rem;
+      font-weight: 300;
+      letter-spacing: 3px;
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+      text-shadow: var(--glow-text-pink);
+      transition: text-shadow var(--transition-slow), color var(--transition-slow);
+    }
+
+    .timer-countdown {
+      font-size: 3.8rem;
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      letter-spacing: -1px;
+    }
+
+    /* CONTROL BUTTONS */
+    .timer-controls {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+
+    .btn-control-reset {
+      width: 75%;
+      padding: 0.8rem;
+      background: transparent;
+      border: 1px solid rgba(255, 107, 107, 0.4);
+      color: rgba(255, 255, 255, 0.8);
+      font-family: var(--font-family);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 5px rgba(255, 107, 107, 0.1);
+      transition: all var(--transition-fast);
+    }
+
+    .btn-control-reset:hover {
+      background: rgba(255, 107, 107, 0.15);
+      border-color: var(--neon-red);
+      box-shadow: var(--glow-red);
+      color: #ffffff;
+    }
+
+    /* STAGE INDICATORS */
+    .phase-indicator-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+      width: 100%;
+    }
+
+    .phase-badge {
+      padding: 0.35rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.01);
+      color: rgba(255, 255, 255, 0.3);
+      transition: all var(--transition-slow);
+    }
+
+    .phase-badge.active-prayer {
+      border-color: rgba(255, 101, 163, 0.4);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 101, 163, 0.2);
+      background: rgba(255, 101, 163, 0.02);
+    }
+
+    .phase-badge.active-bible {
+      border-color: rgba(182, 102, 255, 0.4);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(182, 102, 255, 0.2);
+      background: rgba(182, 102, 255, 0.02);
+    }
+
+    /* CALM, BREATHING START BUTTON GLOW */
+    @keyframes breathing-glow {
+      0% {
+        box-shadow: 0 0 12px rgba(255, 101, 163, 0.25), 0 0 25px rgba(255, 101, 163, 0.1);
+        border-color: rgba(255, 101, 163, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 18px rgba(255, 101, 163, 0.45), 0 0 35px rgba(255, 101, 163, 0.2);
+        border-color: rgba(255, 101, 163, 0.75);
+      }
+      100% {
+        box-shadow: 0 0 12px rgba(255, 101, 163, 0.25), 0 0 25px rgba(255, 101, 163, 0.1);
+        border-color: rgba(255, 101, 163, 0.4);
+      }
+    }
+
+    .pulse-btn {
+      animation: breathing-glow 7s infinite ease-in-out;
+    }
+
+    /* RESPONSIVENESS */
+    @media (max-width: 480px) {
+      .container {
+        padding: 2.2rem 1.8rem;
+        width: 95%;
+      }
+      h1 {
+        font-size: 1.8rem;
+      }
+      .circle-container {
+        width: 220px;
+        height: 220px;
+      }
+      .timer-countdown {
+        font-size: 3.2rem;
+      }
+      .timer-phase-name {
+        font-size: 1.2rem;
+      }
+      .order-selector {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
+  <!-- LIGHTING AMBIANCE -->
+  <div class="ambient-glow" id="ambient-glow"></div>
+  <div class="vertical-progress-bg" id="progress-bg"></div>
 
-<div id="app">
+  <!-- SETUP SCREEN -->
+  <div class="container" id="setup-screen">
+    <h1>Stille Zeit</h1>
+    <div class="sub-headline">Meditation & Besinnung</div>
 
-  <div id="settings">
-    <div class="panel-title">Stille-Zeit</div>
-    <p class="panel-sub">Zwei Momente – Gebet &amp; Gespräch</p>
-
-    <div class="setting-group">
-      <div class="setting-label">Dauer der Phasen</div>
-      <div class="sliders-row">
-
-        <div class="slider-col">
-          <div class="slider-val-big" id="val1-big">15</div>
-          <div class="slider-val-unit">min</div>
-          <div class="v-range-wrap">
-            <input type="range" class="vertical" id="slider1"
-                   min="0" max="30" value="15"
-                   oninput="updateSlider(this,0)">
-          </div>
-          <div class="slider-col-name">Betendes<br>Bibellesen</div>
-        </div>
-
-        <div class="slider-col">
-          <div class="slider-val-big" id="val2-big">10</div>
-          <div class="slider-val-unit">min</div>
-          <div class="v-range-wrap">
-            <input type="range" class="vertical" id="slider2"
-                   min="0" max="30" value="10"
-                   oninput="updateSlider(this,1)">
-          </div>
-          <div class="slider-col-name">Gebet<br>mit Papa</div>
-        </div>
-
+    <!-- PRAYER TIME INPUT -->
+    <div class="setup-group">
+      <div class="setup-label">
+        <span class="label-tag-prayer">Gebetszeit</span>
+        <span class="time-value" id="val-prayer">10 min</span>
+      </div>
+      <div class="slider-container">
+        <input type="range" class="slider-prayer" id="input-prayer" min="1" max="20" value="10" aria-label="Gebetszeit in Minuten">
       </div>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-label">Reihenfolge</div>
-      <div class="order-col">
-        <button class="order-opt active" id="opt-AB" onclick="setOrder('AB')">
-          <span class="opt-num">1 →</span>
-          Bibellesen → Gebet
-        </button>
-        <button class="order-opt" id="opt-BA" onclick="setOrder('BA')">
-          <span class="opt-num">1 →</span>
-          Gebet → Bibellesen
-        </button>
+    <!-- BIBLE READ TIME INPUT -->
+    <div class="setup-group">
+      <div class="setup-label">
+        <span class="label-tag-bible">Bibel Lesen</span>
+        <span class="time-value" id="val-bible">10 min</span>
+      </div>
+      <div class="slider-container">
+        <input type="range" class="slider-bible" id="input-bible" min="1" max="20" value="10" aria-label="Bibellesezeit in Minuten">
       </div>
     </div>
 
-    <button class="btn-start" onclick="startTimer()">▶ &nbsp; Starten</button>
+    <!-- ORDER SELECTOR -->
+    <div class="setup-group">
+      <div class="setup-label" style="margin-bottom: 0.5rem;">Reihenfolge</div>
+      <div class="order-selector">
+        <label class="order-option">
+          <input type="radio" name="timer-order" value="bible-first" checked>
+          <div class="order-card">1. Bibel / 2. Gebet</div>
+        </label>
+        <label class="order-option">
+          <input type="radio" name="timer-order" value="prayer-first">
+          <div class="order-card">1. Gebet / 2. Bibel</div>
+        </label>
+      </div>
+    </div>
+
+    <!-- START BUTTON -->
+    <button class="btn pulse-btn" id="btn-start">Starten</button>
   </div>
 
-  <div id="timer-view">
-    <div id="progress-bg"></div>
+  <!-- TIMER SCREEN -->
+  <div class="container hidden" id="timer-screen">
+    <div class="phase-indicator-row">
+      <div class="phase-badge" id="badge-p1">Phase 1</div>
+      <div class="phase-badge" id="badge-p2">Phase 2</div>
+    </div>
 
-    <div class="timer-inner">
-      <div class="phase-dots">
-        <div class="dot" id="dot0"></div>
-        <div class="dot" id="dot1"></div>
+    <!-- CIRCULAR TIMER DISPLAY -->
+    <div class="circle-container">
+      <svg class="progress-ring">
+        <circle class="progress-ring-bg" cx="130" cy="130" r="115" id="circle-bg" />
+        <circle class="progress-ring-fg" cx="130" cy="130" r="115" id="circle-fg" />
+      </svg>
+      <div class="circle-inner-content">
+        <div class="timer-title">Aktuell</div>
+        <div class="timer-phase-name" id="timer-phase-name">BIBEL LESEN</div>
+        <div class="timer-countdown" id="timer-countdown">10:00</div>
       </div>
-      <div id="phase-label">Phase 1 von 2</div>
+    </div>
 
-      <div class="clock-wrap">
-        <svg class="arc-svg" viewBox="0 0 200 200">
-          <circle class="arc-bg"   cx="100" cy="100" r="88" fill="none" stroke-width="1.5"/>
-          <circle class="arc-fill" id="arc" cx="100" cy="100" r="88" fill="none" stroke-width="2"
-                  stroke-dasharray="553" stroke-dashoffset="0"/>
-        </svg>
-        <div id="clock">15:00</div>
-      </div>
-
-      <div id="phase-heading">Betendes Bibellesen</div>
-      <div id="next-info"></div>
-      <button class="btn-reset" onclick="resetTimer()">↺ &nbsp; Zurücksetzen</button>
+    <!-- MINIMALIST RESET BUTTON ONLY -->
+    <div class="timer-controls">
+      <button class="btn-control-reset" id="btn-reset">Zurücksetzen</button>
     </div>
   </div>
 
-  <div id="done-view">
-    <div class="done-icon">✦</div>
-    <div class="done-title">Vollendet</div>
-    <div class="done-sub">Beide Phasen sind abgeschlossen.</div>
-    <button class="btn-reset" onclick="resetTimer()">↺ &nbsp; Erneut starten</button>
-  </div>
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // DOM Elements
+    const setupScreen = document.getElementById('setup-screen');
+    const timerScreen = document.getElementById('timer-screen');
+    const inputPrayer = document.getElementById('input-prayer');
+    const inputBible = document.getElementById('input-bible');
+    const valPrayer = document.getElementById('val-prayer');
+    const valBible = document.getElementById('val-bible');
+    const btnStart = document.getElementById('btn-start');
+    
+    const timerPhaseName = document.getElementById('timer-phase-name');
+    const timerCountdown = document.getElementById('timer-countdown');
+    const badgeP1 = document.getElementById('badge-p1');
+    const badgeP2 = document.getElementById('badge-p2');
 
-</div>
+    const btnReset = document.getElementById('btn-reset');
 
-<script>
-const PHASES = [
-  { name:'Betendes Bibellesen',  color:'#b04060' },
-  { name:'Gebet mit Papa', color:'#7a3896' }
-];
+    const ambientGlow = document.getElementById('ambient-glow');
+    const progressBg = document.getElementById('progress-bg');
+    
+    const circleFg = document.getElementById('circle-fg');
+    const circleBg = document.getElementById('circle-bg');
 
-let order = 'AB';
-let durations = [15, 10];
-let phaseSeq = [];
-let curPhase = 0;
-let remaining = 0;
-let total = 0;
-let ticker = null;
-let audioCtx = null;
+    // SVG Circular Calculations
+    let radius = 115;
+    let circumference = 2 * Math.PI * radius; // 722.56
 
-function updateSlider(el, idx) {
-  const v = parseInt(el.value);
-  durations[idx] = v;
-  document.getElementById('val' + (idx+1) + '-big').textContent = v;
-  const pct = (v / 30 * 100).toFixed(1) + '%';
-  el.style.setProperty('--pct', pct);
-}
+    // Initialize SVG dash properties
+    circleFg.style.strokeDasharray = `${circumference} ${circumference}`;
+    circleFg.style.strokeDashoffset = 0; // Starts full
 
-['slider1','slider2'].forEach((id,i) => {
-  const el = document.getElementById(id);
-  el.style.setProperty('--pct', (parseInt(el.value)/30*100).toFixed(1)+'%');
-});
+    // Adjust SVG layout dynamically on window resize
+    function handleResize() {
+      const isMobile = window.innerWidth <= 480;
+      const r = isMobile ? 95 : 115;
+      const c = 2 * Math.PI * r;
+      
+      const newCxCy = isMobile ? 110 : 130;
+      
+      circleFg.setAttribute('cx', newCxCy);
+      circleFg.setAttribute('cy', newCxCy);
+      circleFg.setAttribute('r', r);
+      circleBg.setAttribute('cx', newCxCy);
+      circleBg.setAttribute('cy', newCxCy);
+      circleBg.setAttribute('r', r);
+      
+      circleFg.style.strokeDasharray = `${c} ${c}`;
+      radius = r;
+      circumference = c;
+      return c;
+    }
+    
+    window.addEventListener('resize', handleResize);
+    // Execute initially to set the exact dimensions
+    handleResize();
 
-function setOrder(o) {
-  order = o;
-  document.getElementById('opt-AB').classList.toggle('active', o==='AB');
-  document.getElementById('opt-BA').classList.toggle('active', o==='BA');
-}
+    // Dynamic sliders value updater
+    inputPrayer.addEventListener('input', (e) => {
+      valPrayer.textContent = `${e.target.value} min`;
+    });
 
-function initAudio() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-function playChime(type) {
-  if (!audioCtx) return;
-  const notes = type==='done' ? [523.25,659.25,783.99,1046.5] : [783.99,1046.5];
-  notes.forEach((freq,i) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'sine'; osc.frequency.value = freq;
-    const t = audioCtx.currentTime + i * 0.18;
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(0.12, t+0.04);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t+1.2);
-    osc.start(t); osc.stop(t+1.2);
-  });
-}
+    inputBible.addEventListener('input', (e) => {
+      valBible.textContent = `${e.target.value} min`;
+    });
 
-function startTimer() {
-  initAudio();
-  phaseSeq = order==='AB' ? [0,1] : [1,0];
-  curPhase = 0;
-  beginPhase();
-  const s = document.getElementById('settings');
-  s.classList.add('hidden');
-  setTimeout(()=>{ s.style.display='none'; }, 480);
-  document.getElementById('timer-view').classList.add('visible');
-}
+    // Audio & Frame variables
+    let audioCtx = null;
+    let animationFrameId = null;
+    let startTimestamp = null;
+    
+    let originalPrayerMin = 10;
+    let originalBibleMin = 10;
+    
+    let sequence = [];
+    let currentIdx = 0;
+    let totalSessionSec = 0; 
+    let cumulativeElapsedMs = 0;
 
-function beginPhase() {
-  const pi = phaseSeq[curPhase];
-  const phase = PHASES[pi];
-  total = durations[pi] * 60;
-  remaining = total;
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
 
-  document.getElementById('phase-heading').textContent = phase.name;
-  document.getElementById('phase-label').textContent = `Phase ${curPhase+1} von ${phaseSeq.length}`;
+    /**
+     * Meditative Tibetan Singing Bowl Synthesizer (Enhanced - Softer & Calmer)
+     * Generates a deeper, quiet resonance with a very slow fade-in and minimal overtones.
+     */
+    function triggerSingingBowl(fundamental, duration = 4.5, delay = 0) {
+      if (!audioCtx) return;
 
-  phaseSeq.forEach((_,i) => {
-    const d = document.getElementById('dot'+i);
-    d.className = 'dot' + (i<curPhase?' done': i===curPhase?' active':'');
-  });
+      const startTime = audioCtx.currentTime + delay;
+      
+      // Detuned physical harmonics for singing-bowl richness (reduced overtone volume for extreme softness)
+      const harmonics = [
+        { ratio: 1.0,  amp: 0.35, decayMult: 1.0 },   // Deep fundamental warm hum
+        { ratio: 1.19, amp: 0.08, decayMult: 0.8 },   // Consonant minor third (very quiet)
+        { ratio: 1.50, amp: 0.12, decayMult: 0.7 },   // Calm fifth (subtle)
+        { ratio: 2.00, amp: 0.04, decayMult: 0.5 }    // Soft octave (barely audible)
+      ];
 
-  if (curPhase < phaseSeq.length - 1) {
-    const nextPi = phaseSeq[curPhase+1];
-    document.getElementById('next-info').textContent = 'Danach: ' + PHASES[nextPi].name;
-  } else {
-    document.getElementById('next-info').textContent = 'Letzte Phase';
-  }
+      // Master output gain envelope
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0, startTime);
+      
+      // Extremely slow attack (0.6 seconds) makes the onset swell like a soft breath
+      masterGain.gain.linearRampToValueAtTime(0.25, startTime + 0.6);
+      masterGain.gain.setValueAtTime(0.25, startTime + 0.6);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
-  updateClock();
-  clearInterval(ticker);
-  ticker = setInterval(tick, 1000);
-}
+      harmonics.forEach(harmonic => {
+        const osc = audioCtx.createOscillator();
+        const subGain = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(fundamental * harmonic.ratio, startTime);
+        
+        // Decay amplitude envelope
+        subGain.gain.setValueAtTime(harmonic.amp, startTime);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, startTime + (duration * harmonic.decayMult));
+        
+        osc.connect(subGain);
+        subGain.connect(masterGain);
+        
+        osc.start(startTime);
+        osc.stop(startTime + duration + 0.5);
+      });
 
-function tick() {
-  remaining--;
-  if (remaining < 0) remaining = 0;
-  updateClock();
-  if (remaining === 0) { clearInterval(ticker); setTimeout(advancePhase, 800); }
-}
+      masterGain.connect(audioCtx.destination);
+    }
 
-function advancePhase() {
-  curPhase++;
-  if (curPhase < phaseSeq.length) {
-    const rip = document.createElement('div');
-    rip.className = 'ripple';
-    document.getElementById('app').appendChild(rip);
-    setTimeout(()=>rip.remove(), 950);
-    playChime('phase');
-    beginPhase();
-  } else {
-    clearInterval(ticker);
-    playChime('done');
-    document.getElementById('timer-view').classList.remove('visible');
-    setTimeout(()=>{ document.getElementById('done-view').classList.add('visible'); }, 400);
-  }
-}
+    // Play meditative bowl chime exactly twice
+    function playChime(isFinal = false) {
+      initAudio();
+      if (!audioCtx) return;
+      
+      if (!isFinal) {
+        // Intermediate transition bowl: Deep E3 (164.81 Hz - very soothing and grounded)
+        triggerSingingBowl(164.81, 4.2, 0);
+        
+        // Repeat exactly twice, after 2.0 seconds
+        setTimeout(() => {
+          triggerSingingBowl(164.81, 4.2, 0);
+        }, 2000);
+      } else {
+        // Final completion bowl: Deep D3 (146.83 Hz - even lower and resting)
+        triggerSingingBowl(146.83, 5.2, 0);
 
-function updateClock() {
-  const m = Math.floor(remaining/60);
-  const s = remaining % 60;
-  document.getElementById('clock').textContent =
-    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-  document.getElementById('clock').classList.toggle('urgent', remaining<=10 && remaining>0);
-  
-  const offset = 553 * (1 - (total > 0 ? remaining/total : 1));
-  document.getElementById('arc').style.strokeDashoffset = offset;
+        // Repeat exactly twice, after 2.5 seconds
+        setTimeout(() => {
+          triggerSingingBowl(146.83, 5.2, 0);
+        }, 2500);
+      }
+    }
 
-  // Hintergrund läuft von oben nach unten (0% oben, -100% versteckt)
-  const percentDone = total > 0 ? ((total - remaining) / total) * 100 : 100;
-  document.getElementById('progress-bg').style.transform = `translateY(${-100 + percentDone}%)`;
-}
+    // Format MM:SS helper
+    function formatTime(sec) {
+      const mins = Math.floor(sec / 60);
+      const secs = sec % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
 
-function resetTimer() {
-  clearInterval(ticker); ticker = null;
-  document.getElementById('timer-view').classList.remove('visible');
-  document.getElementById('done-view').classList.remove('visible');
-  const s = document.getElementById('settings');
-  s.style.display = 'flex';
-  s.classList.remove('hidden');
-  s.style.animation = 'none';
-  requestAnimationFrame(()=>{ s.style.animation=''; s.style.animationName='fadeUp'; });
-  
-  document.getElementById('progress-bg').style.transform = 'translateY(-100%)';
-  document.getElementById('clock').textContent = '--:--';
-  document.getElementById('clock').classList.remove('urgent');
-  document.getElementById('arc').style.strokeDashoffset = 0;
-}
-</script>
+    // Smooth animation frame loop
+    function animate(timestamp) {
+      if (!startTimestamp) startTimestamp = timestamp;
+      
+      // Time elapsed in the current active phase (in ms)
+      const elapsedMs = timestamp - startTimestamp;
+      
+      const activePhase = sequence[currentIdx];
+      const phaseTotalMs = activePhase.durationSec * 1000;
+      
+      // Calculate remaining ms
+      const phaseTimeLeftMs = Math.max(0, phaseTotalMs - elapsedMs);
+      
+      // 1. Text countdown display (calm whole seconds)
+      const displaySeconds = Math.ceil(phaseTimeLeftMs / 1000);
+      timerCountdown.textContent = formatTime(displaySeconds);
+      
+      // 2. BUTTERY SMOOTH Progress Ring (Kreis der flüssig abläuft)
+      const phaseFraction = phaseTimeLeftMs / phaseTotalMs;
+      const dashoffset = circumference * (1 - phaseFraction);
+      circleFg.style.strokeDashoffset = dashoffset;
+      
+      // 3. Fluid background progressions
+      const totalElapsedMs = cumulativeElapsedMs + elapsedMs;
+      const totalSessionMs = totalSessionSec * 1000;
+      const overallProgressFraction = Math.min(1, totalElapsedMs / totalSessionMs);
+      
+      ambientGlow.style.opacity = (overallProgressFraction * 0.65).toFixed(4);
+      progressBg.style.height = `${(overallProgressFraction * 100).toFixed(2)}%`;
+      
+      // Active styling modifications based on phase
+      if (activePhase.id === 'prayer') {
+        timerPhaseName.style.color = 'var(--neon-pink)';
+        timerPhaseName.style.textShadow = 'var(--glow-text-pink)';
+        circleFg.style.stroke = 'var(--neon-pink)';
+        circleFg.style.filter = 'drop-shadow(0 0 10px rgba(255, 101, 163, 0.45))';
+        progressBg.style.borderTopColor = 'rgba(255, 101, 163, 0.25)';
+        progressBg.style.boxShadow = '0 -8px 20px rgba(255, 101, 163, 0.1)';
+      } else {
+        timerPhaseName.style.color = 'var(--neon-purple)';
+        timerPhaseName.style.textShadow = 'var(--glow-text-purple)';
+        circleFg.style.stroke = 'var(--neon-purple)';
+        circleFg.style.filter = 'drop-shadow(0 0 10px rgba(182, 102, 255, 0.45))';
+        progressBg.style.borderTopColor = 'rgba(182, 102, 255, 0.25)';
+        progressBg.style.boxShadow = '0 -8px 20px rgba(182, 102, 255, 0.1)';
+      }
+      
+      // Check phase transition
+      if (phaseTimeLeftMs <= 0) {
+        if (currentIdx < sequence.length - 1) {
+          // Move from phase 1 to phase 2
+          cumulativeElapsedMs += phaseTotalMs;
+          currentIdx++;
+          startTimestamp = performance.now();
+          
+          timerPhaseName.textContent = sequence[currentIdx].name;
+          updatePhaseBadges();
+          playChime(false);
+          
+          animationFrameId = requestAnimationFrame(animate);
+        } else {
+          // Finished the entire session
+          animationFrameId = null;
+          
+          timerCountdown.textContent = "00:00";
+          timerPhaseName.textContent = "FERTIG";
+          timerPhaseName.style.color = 'var(--neon-red)';
+          timerPhaseName.style.textShadow = 'var(--glow-text-red)';
+          circleFg.style.stroke = 'var(--neon-red)';
+          circleFg.style.filter = 'drop-shadow(0 0 10px rgba(255, 107, 107, 0.5))';
+          circleFg.style.strokeDashoffset = circumference;
+          
+          playChime(true);
+        }
+      } else {
+        // Continue animation loop
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    }
+
+    // Badge setup
+    function updatePhaseBadges() {
+      badgeP1.textContent = sequence[0].name;
+      badgeP2.textContent = sequence[1].name;
+
+      badgeP1.className = 'phase-badge';
+      badgeP2.className = 'phase-badge';
+
+      if (currentIdx === 0) {
+        badgeP1.classList.add(sequence[0].id === 'prayer' ? 'active-prayer' : 'active-bible');
+      } else {
+        badgeP2.classList.add(sequence[1].id === 'prayer' ? 'active-prayer' : 'active-bible');
+      }
+    }
+
+    // Start timer process
+    function startTimer() {
+      initAudio();
+      
+      originalPrayerMin = parseInt(inputPrayer.value);
+      originalBibleMin = parseInt(inputBible.value);
+      
+      const orderVal = document.querySelector('input[name="timer-order"]:checked').value;
+      
+      const prayerPhase = { name: 'Gebet', durationSec: originalPrayerMin * 60, id: 'prayer' };
+      const biblePhase = { name: 'Bibel lesen', durationSec: originalBibleMin * 60, id: 'bible' };
+      
+      if (orderVal === 'prayer-first') {
+        sequence = [prayerPhase, biblePhase];
+      } else {
+        sequence = [biblePhase, prayerPhase];
+      }
+      
+      currentIdx = 0;
+      totalSessionSec = sequence[0].durationSec + sequence[1].durationSec;
+      cumulativeElapsedMs = 0;
+      startTimestamp = null;
+      
+      timerPhaseName.textContent = sequence[currentIdx].name;
+      
+      // Update UI
+      updatePhaseBadges();
+      handleResize();
+      
+      // Screen transition
+      setupScreen.classList.add('hidden');
+      timerScreen.classList.remove('hidden');
+      
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    btnStart.addEventListener('click', startTimer);
+
+    // Reset timer action
+    btnReset.addEventListener('click', () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      
+      // Smooth reset displays
+      ambientGlow.style.opacity = '0';
+      progressBg.style.height = '0%';
+      circleFg.style.strokeDashoffset = 0;
+      
+      // Swap screens
+      timerScreen.classList.add('hidden');
+      setupScreen.classList.remove('hidden');
+    });
+
+  </script>
 </body>
 </html>
