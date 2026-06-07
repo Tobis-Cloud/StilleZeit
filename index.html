@@ -612,14 +612,47 @@
     window.addEventListener('resize', handleResize);
     handleResize();
 
-    // Dynamic sliders value updater
+    // LOAD FROM LOCAL STORAGE
+    function loadSettings() {
+      const savedPrayer = localStorage.getItem('stilleZeit_prayer');
+      const savedBible = localStorage.getItem('stilleZeit_bible');
+      const savedOrder = localStorage.getItem('stilleZeit_order');
+
+      if (savedPrayer !== null) {
+        inputPrayer.value = savedPrayer;
+      }
+      valPrayer.textContent = `${inputPrayer.value} min`;
+
+      if (savedBible !== null) {
+        inputBible.value = savedBible;
+      }
+      valBible.textContent = `${inputBible.value} min`;
+
+      if (savedOrder !== null) {
+        const radioToCheck = document.querySelector(`input[name="timer-order"][value="${savedOrder}"]`);
+        if (radioToCheck) radioToCheck.checked = true;
+      }
+    }
+
+    // Dynamic sliders value updater & save
     inputPrayer.addEventListener('input', (e) => {
       valPrayer.textContent = `${e.target.value} min`;
+      localStorage.setItem('stilleZeit_prayer', e.target.value);
     });
 
     inputBible.addEventListener('input', (e) => {
       valBible.textContent = `${e.target.value} min`;
+      localStorage.setItem('stilleZeit_bible', e.target.value);
     });
+
+    document.querySelectorAll('input[name="timer-order"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        localStorage.setItem('stilleZeit_order', e.target.value);
+      });
+    });
+
+    // Initial load
+    loadSettings();
 
     // Audio & Frame variables
     let audioCtx = null;
