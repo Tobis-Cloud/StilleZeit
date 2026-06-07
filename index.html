@@ -6,12 +6,12 @@
   <meta name="description" content="Stille Zeit Timer - Ein moderner, minimalistischer Meditations-Timer für Gebet und Bibelarbeit mit flüssigen Animationen und beruhigenden Klangschalen.">
   <title>Stille Zeit Timer</title>
   
-  <!-- iOS HOME SCREEN APP ICON -->
   <link rel="apple-touch-icon" href="Stille.jpeg">
   <link rel="apple-touch-icon" sizes="152x152" href="Binokel.jpeg">
   <link rel="apple-touch-icon" sizes="180x180" href="Binokel.jpeg">
   <meta name="apple-mobile-web-app-title" content="Stille Zeit">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <style>
     /* SOFT MODERN NEON DESIGN TOKENS */
@@ -490,16 +490,13 @@
 </head>
 <body>
 
-  <!-- LIGHTING AMBIANCE -->
   <div class="ambient-glow" id="ambient-glow"></div>
   <div class="vertical-progress-bg" id="progress-bg"></div>
 
-  <!-- SETUP SCREEN -->
   <div class="container" id="setup-screen">
     <h1>Stille Zeit</h1>
     <div class="sub-headline">Meditation & Besinnung</div>
 
-    <!-- PRAYER TIME INPUT -->
     <div class="setup-group">
       <div class="setup-label">
         <span class="label-tag-prayer">Gebetszeit</span>
@@ -510,7 +507,6 @@
       </div>
     </div>
 
-    <!-- BIBLE READ TIME INPUT -->
     <div class="setup-group">
       <div class="setup-label">
         <span class="label-tag-bible">Bibel Lesen</span>
@@ -521,7 +517,6 @@
       </div>
     </div>
 
-    <!-- ORDER SELECTOR -->
     <div class="setup-group">
       <div class="setup-label" style="margin-bottom: 0.5rem;">Reihenfolge</div>
       <div class="order-selector">
@@ -536,18 +531,15 @@
       </div>
     </div>
 
-    <!-- START BUTTON -->
     <button class="btn pulse-btn" id="btn-start">Starten</button>
   </div>
 
-  <!-- TIMER SCREEN -->
   <div class="container hidden" id="timer-screen">
     <div class="phase-indicator-row">
       <div class="phase-badge" id="badge-p1">Phase 1</div>
       <div class="phase-badge" id="badge-p2">Phase 2</div>
     </div>
 
-    <!-- CIRCULAR TIMER DISPLAY -->
     <div class="circle-container">
       <svg class="progress-ring">
         <circle class="progress-ring-bg" cx="130" cy="130" r="115" id="circle-bg" />
@@ -560,13 +552,11 @@
       </div>
     </div>
 
-    <!-- MINIMALIST RESET BUTTON ONLY -->
     <div class="timer-controls">
       <button class="btn-control-reset" id="btn-reset">Zurücksetzen</button>
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC -->
   <script>
     // DOM Elements
     const setupScreen = document.getElementById('setup-screen');
@@ -592,11 +582,11 @@
 
     // SVG Circular Calculations
     let radius = 115;
-    let circumference = 2 * Math.PI * radius; // 722.56
+    let circumference = 2 * Math.PI * radius;
 
     // Initialize SVG dash properties
     circleFg.style.strokeDasharray = `${circumference} ${circumference}`;
-    circleFg.style.strokeDashoffset = 0; // Starts full
+    circleFg.style.strokeDashoffset = 0;
 
     // Adjust SVG layout dynamically on window resize
     function handleResize() {
@@ -620,7 +610,6 @@
     }
     
     window.addEventListener('resize', handleResize);
-    // Execute initially to set the exact dimensions
     handleResize();
 
     // Dynamic sliders value updater
@@ -647,35 +636,40 @@
 
     function initAudio() {
       if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // iOS Hack: Zwingt den AudioContext in den "playback" Modus, der die Stummschaltung ignoriert.
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
+      
+      // iOS PWA Silent Mode Bypass: Erzeugt ein kurzes, lautloses Signal direkt beim Klick,
+      // um den Kanal für spätere Töne dauerhaft im Mediamodus zu öffnen.
+      const buffer = audioCtx.createBuffer(1, 1, 22050);
+      const node = audioCtx.createBufferSource();
+      node.buffer = buffer;
+      node.connect(audioCtx.destination);
+      node.start(0);
     }
 
     /**
-     * Meditative Tibetan Singing Bowl Synthesizer (Enhanced - Softer & Calmer)
-     * Generates a deeper, quiet resonance with a very slow fade-in and minimal overtones.
+     * Meditative Tibetan Singing Bowl Synthesizer
      */
     function triggerSingingBowl(fundamental, duration = 4.5, delay = 0) {
       if (!audioCtx) return;
 
       const startTime = audioCtx.currentTime + delay;
       
-      // Detuned physical harmonics for singing-bowl richness (reduced overtone volume for extreme softness)
       const harmonics = [
-        { ratio: 1.0,  amp: 0.35, decayMult: 1.0 },   // Deep fundamental warm hum
-        { ratio: 1.19, amp: 0.08, decayMult: 0.8 },   // Consonant minor third (very quiet)
-        { ratio: 1.50, amp: 0.12, decayMult: 0.7 },   // Calm fifth (subtle)
-        { ratio: 2.00, amp: 0.04, decayMult: 0.5 }    // Soft octave (barely audible)
+        { ratio: 1.0,  amp: 0.35, decayMult: 1.0 },
+        { ratio: 1.19, amp: 0.08, decayMult: 0.8 },
+        { ratio: 1.50, amp: 0.12, decayMult: 0.7 },
+        { ratio: 2.00, amp: 0.04, decayMult: 0.5 }
       ];
 
-      // Master output gain envelope
       const masterGain = audioCtx.createGain();
       masterGain.gain.setValueAtTime(0, startTime);
       
-      // Extremely slow attack (0.6 seconds) makes the onset swell like a soft breath
       masterGain.gain.linearRampToValueAtTime(0.25, startTime + 0.6);
       masterGain.gain.setValueAtTime(0.25, startTime + 0.6);
       masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
@@ -687,7 +681,6 @@
         osc.type = 'sine';
         osc.frequency.setValueAtTime(fundamental * harmonic.ratio, startTime);
         
-        // Decay amplitude envelope
         subGain.gain.setValueAtTime(harmonic.amp, startTime);
         subGain.gain.exponentialRampToValueAtTime(0.0001, startTime + (duration * harmonic.decayMult));
         
@@ -701,60 +694,44 @@
       masterGain.connect(audioCtx.destination);
     }
 
-    // Play meditative bowl chime exactly twice
     function playChime(isFinal = false) {
-      initAudio();
+      if (!audioCtx) initAudio();
       if (!audioCtx) return;
       
       if (!isFinal) {
-        // Intermediate transition bowl: Deep E3 (164.81 Hz - very soothing and grounded)
         triggerSingingBowl(164.81, 4.2, 0);
-        
-        // Repeat exactly twice, after 2.0 seconds
         setTimeout(() => {
           triggerSingingBowl(164.81, 4.2, 0);
         }, 2000);
       } else {
-        // Final completion bowl: Deep D3 (146.83 Hz - even lower and resting)
         triggerSingingBowl(146.83, 5.2, 0);
-
-        // Repeat exactly twice, after 2.5 seconds
         setTimeout(() => {
           triggerSingingBowl(146.83, 5.2, 0);
         }, 2500);
       }
     }
 
-    // Format MM:SS helper
     function formatTime(sec) {
       const mins = Math.floor(sec / 60);
       const secs = sec % 60;
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
-    // Smooth animation frame loop
     function animate(timestamp) {
       if (!startTimestamp) startTimestamp = timestamp;
       
-      // Time elapsed in the current active phase (in ms)
       const elapsedMs = timestamp - startTimestamp;
-      
       const activePhase = sequence[currentIdx];
       const phaseTotalMs = activePhase.durationSec * 1000;
-      
-      // Calculate remaining ms
       const phaseTimeLeftMs = Math.max(0, phaseTotalMs - elapsedMs);
       
-      // 1. Text countdown display (calm whole seconds)
       const displaySeconds = Math.ceil(phaseTimeLeftMs / 1000);
       timerCountdown.textContent = formatTime(displaySeconds);
       
-      // 2. BUTTERY SMOOTH Progress Ring (Kreis der flüssig abläuft)
       const phaseFraction = phaseTimeLeftMs / phaseTotalMs;
       const dashoffset = circumference * (1 - phaseFraction);
       circleFg.style.strokeDashoffset = dashoffset;
       
-      // 3. Fluid background progressions
       const totalElapsedMs = cumulativeElapsedMs + elapsedMs;
       const totalSessionMs = totalSessionSec * 1000;
       const overallProgressFraction = Math.min(1, totalElapsedMs / totalSessionMs);
@@ -762,7 +739,6 @@
       ambientGlow.style.opacity = (overallProgressFraction * 0.65).toFixed(4);
       progressBg.style.height = `${(overallProgressFraction * 100).toFixed(2)}%`;
       
-      // Active styling modifications based on phase
       if (activePhase.id === 'prayer') {
         timerPhaseName.style.color = 'var(--neon-pink)';
         timerPhaseName.style.textShadow = 'var(--glow-text-pink)';
@@ -779,10 +755,8 @@
         progressBg.style.boxShadow = '0 -8px 20px rgba(182, 102, 255, 0.1)';
       }
       
-      // Check phase transition
       if (phaseTimeLeftMs <= 0) {
         if (currentIdx < sequence.length - 1) {
-          // Move from phase 1 to phase 2
           cumulativeElapsedMs += phaseTotalMs;
           currentIdx++;
           startTimestamp = performance.now();
@@ -793,7 +767,6 @@
           
           animationFrameId = requestAnimationFrame(animate);
         } else {
-          // Finished the entire session
           animationFrameId = null;
           
           timerCountdown.textContent = "00:00";
@@ -807,12 +780,10 @@
           playChime(true);
         }
       } else {
-        // Continue animation loop
         animationFrameId = requestAnimationFrame(animate);
       }
     }
 
-    // Badge setup
     function updatePhaseBadges() {
       badgeP1.textContent = sequence[0].name;
       badgeP2.textContent = sequence[1].name;
@@ -827,8 +798,8 @@
       }
     }
 
-    // Start timer process
     function startTimer() {
+      // Aktiviert das Audio-System im iOS-Medienkanal
       initAudio();
       
       originalPrayerMin = parseInt(inputPrayer.value);
@@ -852,11 +823,9 @@
       
       timerPhaseName.textContent = sequence[currentIdx].name;
       
-      // Update UI
       updatePhaseBadges();
       handleResize();
       
-      // Screen transition
       setupScreen.classList.add('hidden');
       timerScreen.classList.remove('hidden');
       
@@ -866,23 +835,19 @@
 
     btnStart.addEventListener('click', startTimer);
 
-    // Reset timer action
     btnReset.addEventListener('click', () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
       }
       
-      // Smooth reset displays
       ambientGlow.style.opacity = '0';
       progressBg.style.height = '0%';
       circleFg.style.strokeDashoffset = 0;
       
-      // Swap screens
       timerScreen.classList.add('hidden');
       setupScreen.classList.remove('hidden');
     });
-
   </script>
 </body>
 </html>
